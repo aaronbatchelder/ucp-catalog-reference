@@ -12,7 +12,7 @@ const json = async (path: string, body?: unknown) => {
   if (!res.ok || !(res.headers.get("content-type") ?? "").includes("json")) throw new Error(`${path} -> HTTP ${res.status} ${res.headers.get("content-type")}`);
   return res.json();
 };
-const check = (name: string, ok: boolean) => { console.log(`${ok ? "ok" : "FAIL"} - ${name}`); if (!ok) process.exitCode = 1; };
+const check = (name: string, ok: boolean) => { console.error(`${ok ? "ok" : "FAIL"} - ${name}`); if (!ok) process.exitCode = 1; };
 
 const profile = await json("/.well-known/ucp");
 assertValid("https://ucp.dev/schemas/profile.json", profile);
