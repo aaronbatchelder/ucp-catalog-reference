@@ -4,8 +4,11 @@ import { ajv, assertValid, validator } from "../test/helpers/validate.js";
 
 const origin = process.argv[2]?.replace(/\/$/, "");
 if (!origin) throw new Error("usage: verify-live <origin>");
+// Protected preview deployments accept the linked project's short-lived OIDC
+// token as a header (run under `vercel env run -- …`); never log it.
+const auth: Record<string, string> = process.env.VERCEL_OIDC_TOKEN ? { "x-vercel-trusted-oidc-idp-token": process.env.VERCEL_OIDC_TOKEN } : {};
 const json = async (path: string, body?: unknown) => {
-  const res = await fetch(origin + path, body ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : undefined);
+  const res = await fetch(origin + path, { method: body ? "POST" : "GET", headers: { ...auth, ...(body ? { "content-type": "application/json" } : {}) }, body: body ? JSON.stringify(body) : undefined });
   if (!res.ok || !(res.headers.get("content-type") ?? "").includes("json")) throw new Error(`${path} -> HTTP ${res.status} ${res.headers.get("content-type")}`);
   return res.json();
 };
