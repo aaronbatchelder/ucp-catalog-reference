@@ -6,7 +6,7 @@ const origin = process.argv[2]?.replace(/\/$/, "");
 if (!origin) throw new Error("usage: verify-live <origin>");
 const json = async (path: string, body?: unknown) => {
   const res = await fetch(origin + path, body ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : undefined);
-  if (!res.ok) throw new Error(`${path} -> HTTP ${res.status}`);
+  if (!res.ok || !(res.headers.get("content-type") ?? "").includes("json")) throw new Error(`${path} -> HTTP ${res.status} ${res.headers.get("content-type")}`);
   return res.json();
 };
 const check = (name: string, ok: boolean) => { console.log(`${ok ? "ok" : "FAIL"} - ${name}`); if (!ok) process.exitCode = 1; };
