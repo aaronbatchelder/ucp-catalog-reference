@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ucp.aaronbatchelder.com/schemas/price_substantiation.json",
+  "title": "Price Substantiation Extension",
+  "description": "Carries the reference price and period behind a variant's list_price comparison claim. Vendor-namespaced (com.aaronbatchelder.price_substantiation) incubation of a proposed dev.ucp.shopping.price_substantiation extension. Response-only; purely additive.",
+  "$defs": {
+    "list_price_basis": {
+      "title": "List Price Basis",
+      "description": "Substantiation for `list_price`. Present only when the Business asserts a basis for the comparison. Absence carries no meaning.",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "basis": {
+          "type": "string",
+          "description": "What the list price refers to. Well-known values: `prior_price` (a price this Business actually charged for this variant), `msrp` (manufacturer's or supplier's suggested price). Businesses MAY use additional values."
+        },
+        "reference_price": {
+          "$ref": "https://ucp.dev/schemas/common/types/price.json",
+          "description": "The price the reduction is measured against. For `prior_price` in jurisdictions with a lowest-prior-price rule (e.g. EU Price Indication Directive Art. 6a), this is the lowest price applied during `period`, which MAY differ from `list_price`."
+        },
+        "period": {
+          "type": "object",
+          "description": "Period over which `reference_price` was determined.",
+          "required": ["start", "end"],
+          "properties": {
+            "start": { "type": "string", "format": "date", "description": "First day of the reference period (ISO 8601 date)." },
+            "end": { "type": "string", "format": "date", "description": "Last day of the reference period (ISO 8601 date)." }
+          }
+        },
+        "source": {
+          "type": "string",
+          "description": "Attesting party when `basis` is not the Business itself (e.g. manufacturer name for `msrp`)."
+        }
+      }
+    },
+    "variant_with_basis": {
+      "allOf": [
+        { "$ref": "https://ucp.dev/schemas/shopping/types/variant.json" },
+        { "type": "object", "properties": { "list_price_basis": { "$ref": "#/$defs/list_price_basis", "ucp_request": "omit" } } }
+      ]
+    },
+    "dev.ucp.shopping.catalog.search": {
+      "title": "Catalog Search with Price Substantiation",
+      "description": "Catalog Search response whose product variants MAY carry list_price_basis.",
+      "allOf": [
+        { "$ref": "https://ucp.dev/schemas/shopping/catalog_search.json#/$defs/search_response" },
+        { "type": "object", "properties": { "products": { "type": "array", "items": { "type": "object", "properties": { "variants": { "type": "array", "items": { "$ref": "#/$defs/variant_with_basis" } } } } } } }
+      ]
+    },
+    "dev.ucp.shopping.catalog.lookup": {
+      "title": "Catalog Lookup with Price Substantiation",
+      "description": "Catalog Lookup responses whose variants MAY carry list_price_basis.",
+      "oneOf": [
+        { "allOf": [ { "$ref": "https://ucp.dev/schemas/shopping/catalog_lookup.json#/$defs/lookup_response" }, { "type": "object", "properties": { "products": { "type": "array", "items": { "type": "object", "properties": { "variants": { "type": "array", "items": { "$ref": "#/$defs/variant_with_basis" } } } } } } } ] },
+        { "allOf": [ { "$ref": "https://ucp.dev/schemas/shopping/catalog_lookup.json#/$defs/get_product_response" }, { "type": "object", "properties": { "product": { "type": "object", "properties": { "variants": { "type": "array", "items": { "$ref": "#/$defs/variant_with_basis" } } } } } } ] }
+      ]
+    }
+  }
+}
